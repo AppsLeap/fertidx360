@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
-import 'calendar_view.dart';
-import 'analytics_view.dart';
-import 'appointments_experts_list.dart';
 
-class DashboardView extends StatefulWidget {
+class DashboardContent extends StatefulWidget {
   final int age;
   final DateTime firstDayOfPeriod;
   final int cycleLength;
 
-  const DashboardView({
+  const DashboardContent({
     super.key,
     required this.age,
     required this.firstDayOfPeriod,
@@ -16,11 +13,11 @@ class DashboardView extends StatefulWidget {
   });
 
   @override
-  State<DashboardView> createState() => _DashboardViewState();
+  State<DashboardContent> createState() => _DashboardContentState();
 }
 
-class _DashboardViewState extends State<DashboardView> {
-  int _selectedIndex = 0;
+class _DashboardContentState extends State<DashboardContent> {
+  final ScrollController _scrollController = ScrollController();
 
   int _calculateCycleDay() {
     final today = DateTime.now();
@@ -53,47 +50,10 @@ class _DashboardViewState extends State<DashboardView> {
     return '${months[date.month - 1]} ${date.day}';
   }
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-
-    // Navigate to different screens
-    switch (index) {
-      case 0:
-      // Already on Home
-        break;
-      case 1:
-      // Navigate to Calendar
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => CalendarView(
-              firstDayOfPeriod: widget.firstDayOfPeriod,
-              cycleLength: widget.cycleLength,
-            ),
-          ),
-        );
-        break;
-      case 2:
-      // Navigate to Analytics/Insights
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const AnalyticsView(),
-          ),
-        );
-        break;
-      case 3:
-      // Navigate to Experts
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => AppointmentsExpertsListView(),
-          ),
-        );
-        break;
-    }
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -102,54 +62,19 @@ class _DashboardViewState extends State<DashboardView> {
     final nextPeriod = _calculateNextPeriod();
     final currentPhase = _getCurrentPhase();
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        title: Row(
-          children: [
-            Image.asset(
-              'assets/logo.png',
-              width: 28,
-              height: 28,
-            ),
-            const SizedBox(width: 8),
-            const Text(
-              'FertiDx 360',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF5DADA4),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(
-              Icons.notifications_outlined,
-              color: Color(0xFF2D2D2D),
-            ),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(
-              Icons.account_circle_outlined,
-              color: Color(0xFF2D2D2D),
-            ),
-            onPressed: () {},
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
+    return Scrollbar(
+      controller: _scrollController,
+      thumbVisibility: false,
+      thickness: 4,
+      radius: const Radius.circular(2),
+      child: SingleChildScrollView(
+        controller: _scrollController,
+        child: Container(
+          color: Colors.white,
           padding: const EdgeInsets.all(20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Title
               const Text(
                 'Your Daily Snapshot',
                 style: TextStyle(
@@ -158,10 +83,7 @@ class _DashboardViewState extends State<DashboardView> {
                   color: Color(0xFF2D2D2D),
                 ),
               ),
-
               const SizedBox(height: 20),
-
-              // Cycle Day Card
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(24),
@@ -212,13 +134,9 @@ class _DashboardViewState extends State<DashboardView> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 20),
-
-              // Prediction Cards
               Row(
                 children: [
-                  // Next Period Card
                   Expanded(
                     child: Container(
                       padding: const EdgeInsets.all(16),
@@ -260,10 +178,7 @@ class _DashboardViewState extends State<DashboardView> {
                       ),
                     ),
                   ),
-
                   const SizedBox(width: 16),
-
-                  // Cycle Length Card
                   Expanded(
                     child: Container(
                       padding: const EdgeInsets.all(16),
@@ -315,10 +230,7 @@ class _DashboardViewState extends State<DashboardView> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 24),
-
-              // AI Insights Card
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
@@ -414,45 +326,6 @@ class _DashboardViewState extends State<DashboardView> {
               ),
             ],
           ),
-        ),
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        child: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.white,
-          currentIndex: _selectedIndex,
-          onTap: _onItemTapped,
-          selectedItemColor: const Color(0xFF5DADA4),
-          unselectedItemColor: const Color(0xFFB0B0B0),
-          selectedFontSize: 12,
-          unselectedFontSize: 12,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_today),
-              label: 'Calendar',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.show_chart),
-              label: 'Insights',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.school),
-              label: 'Experts',
-            ),
-          ],
         ),
       ),
     );

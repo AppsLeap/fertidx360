@@ -1,58 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
-class AnalyticsView extends StatefulWidget {
-  const AnalyticsView({super.key});
+class AnalyticsContent extends StatefulWidget {
+  const AnalyticsContent({super.key});
 
   @override
-  State<AnalyticsView> createState() => _AnalyticsViewState();
+  State<AnalyticsContent> createState() => _AnalyticsContentState();
 }
 
-class _AnalyticsViewState extends State<AnalyticsView> {
+class _AnalyticsContentState extends State<AnalyticsContent> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF0FFF5),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        title: Row(
-          children: [
-            Image.asset(
-              'assets/logo.png',
-              width: 28,
-              height: 28,
-            ),
-            const SizedBox(width: 8),
-            const Text(
-              'FertiDx 360',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF5DADA4),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(
-              Icons.notifications_outlined,
-              color: Color(0xFF2D2D2D),
-            ),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(
-              Icons.account_circle_outlined,
-              color: Color(0xFF2D2D2D),
-            ),
-            onPressed: () {},
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
+    return Scrollbar(
+      controller: _scrollController,
+      thumbVisibility: false,
+      thickness: 4,
+      radius: const Radius.circular(2),
+      child: SingleChildScrollView(
+        controller: _scrollController,
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -66,8 +39,6 @@ class _AnalyticsViewState extends State<AnalyticsView> {
               ),
             ),
             const SizedBox(height: 24),
-
-            // Cycle Length Variation
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -200,10 +171,7 @@ class _AnalyticsViewState extends State<AnalyticsView> {
                 ],
               ),
             ),
-
             const SizedBox(height: 20),
-
-            // Symptom Frequency
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -238,10 +206,7 @@ class _AnalyticsViewState extends State<AnalyticsView> {
                 ],
               ),
             ),
-
             const SizedBox(height: 20),
-
-            // Weight Trend
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),

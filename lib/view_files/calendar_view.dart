@@ -2,33 +2,37 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'daily_log_modal_view.dart';
 
-class CalendarView extends StatefulWidget {
+class CalendarContent extends StatefulWidget {
   final DateTime firstDayOfPeriod;
   final int cycleLength;
 
-
-
-  
-  const CalendarView({
+  const CalendarContent({
     super.key,
     required this.firstDayOfPeriod,
     required this.cycleLength,
   });
 
   @override
-  State<CalendarView> createState() => _CalendarViewState();
+  State<CalendarContent> createState() => _CalendarContentState();
 }
 
-class _CalendarViewState extends State<CalendarView> {
+class _CalendarContentState extends State<CalendarContent> {
   late DateTime _focusedDay;
   DateTime? _selectedDay;
   CalendarFormat _calendarFormat = CalendarFormat.month;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _focusedDay = DateTime.now();
     _selectedDay = DateTime.now();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   bool _isPeriodDay(DateTime day) {
@@ -71,50 +75,16 @@ class _CalendarViewState extends State<CalendarView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF0FFF5),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        title: Row(
-          children: [
-            Image.asset(
-              'assets/logo.png',
-              width: 28,
-              height: 28,
-            ),
-            const SizedBox(width: 8),
-            const Text(
-              'FertiDx 360',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF5DADA4),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(
-              Icons.notifications_outlined,
-              color: Color(0xFF2D2D2D),
-            ),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(
-              Icons.account_circle_outlined,
-              color: Color(0xFF2D2D2D),
-            ),
-            onPressed: () {},
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Container(
+    return Scrollbar(
+      controller: _scrollController,
+      thumbVisibility: false,
+      thickness: 4,
+      radius: const Radius.circular(2),
+      child: SingleChildScrollView(
+        controller: _scrollController,
+        child: Container(
+          color: const Color(0xFFF0FFF5),
+          child: Container(
             color: Colors.white,
             child: TableCalendar(
               firstDay: DateTime.utc(2020, 1, 1),
@@ -237,7 +207,7 @@ class _CalendarViewState extends State<CalendarView> {
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }

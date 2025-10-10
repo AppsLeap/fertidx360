@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dashboard_view.dart';
-
+import 'main_scaffold.dart';
 class OnboardingCompleteView extends StatelessWidget {
   final int age;
   final DateTime firstDayOfPeriod;
@@ -96,7 +96,7 @@ class OnboardingCompleteView extends StatelessWidget {
                     Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => DashboardView(
+                        builder: (context) =>MainScaffold(
                           age: age,
                           firstDayOfPeriod: firstDayOfPeriod,
                           cycleLength: cycleLength,

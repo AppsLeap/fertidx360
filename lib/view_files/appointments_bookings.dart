@@ -18,6 +18,7 @@ class AppointmentsBookingsView extends StatefulWidget {
 class _AppointmentsBookingsViewState extends State<AppointmentsBookingsView> {
   DateTime _selectedDate = DateTime(2025, 10, 15);
   String? _selectedTime;
+  final ScrollController _scrollController = ScrollController();
 
   final List<String> _timeSlots = [
     '9:00 AM',
@@ -32,7 +33,7 @@ class _AppointmentsBookingsViewState extends State<AppointmentsBookingsView> {
   ];
 
   String _formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}-${date.month.toString().padLeft(2, '0')}-${date.year}';
+    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
   }
 
   Future<void> _selectDate(BuildContext context) async {
@@ -84,6 +85,12 @@ class _AppointmentsBookingsViewState extends State<AppointmentsBookingsView> {
   }
 
   @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF0FFF5),
@@ -132,188 +139,213 @@ class _AppointmentsBookingsViewState extends State<AppointmentsBookingsView> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Expert Info Card
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.expert.name,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF2D2D2D),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        widget.expert.specialization,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Color(0xFF7A7A7A),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text(
-                      'Change',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF5DADA4),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Select Date
-            const Text(
-              '2. Select a Date',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF2D2D2D),
-              ),
-            ),
-            const SizedBox(height: 12),
-            GestureDetector(
-              onTap: () => _selectDate(context),
-              child: Container(
-                padding: const EdgeInsets.all(16),
+      body: Scrollbar(
+        controller: _scrollController,
+        thumbVisibility: false,
+        thickness: 4,
+        radius: const Radius.circular(2),
+        child: SingleChildScrollView(
+          controller: _scrollController,
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Expert Info Card
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: const Color(0xFFE0E0E0),
-                    width: 1,
-                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      _formatDate(_selectedDate),
-                      style: const TextStyle(
-                        fontSize: 15,
-                        color: Color(0xFF2D2D2D),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.expert.name,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF2D2D2D),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            widget.expert.specialization,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              color: Color(0xFF9E9E9E),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const Spacer(),
-                    const Icon(
-                      Icons.calendar_today,
-                      color: Color(0xFF7A7A7A),
-                      size: 20,
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                      ),
+                      child: const Text(
+                        'Change',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF5DADA4),
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
-            ),
 
-            const SizedBox(height: 24),
+              const SizedBox(height: 28),
 
-            // Select Time
-            const Text(
-              '3. Select a Time',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF2D2D2D),
+              // Select Date Section
+              const Text(
+                '2. Select a Date',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF2D2D2D),
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _timeSlots.map((time) {
-                final isSelected = _selectedTime == time;
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedTime = time;
-                    });
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 12,
+              const SizedBox(height: 14),
+              GestureDetector(
+                onTap: () => _selectDate(context),
+                child: Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF5F5F5),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: const Color(0xFFE0E0E0),
+                      width: 1,
                     ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? const Color(0xFF5DADA4)
-                          : Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
+                  ),
+                  child: Row(
+                    children: [
+                      Text(
+                        _formatDate(_selectedDate),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Color(0xFF2D2D2D),
+                        ),
+                      ),
+                      const Spacer(),
+                      const Icon(
+                        Icons.keyboard_arrow_down,
+                        color: Color(0xFF7A7A7A),
+                        size: 24,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 28),
+
+              // Select Time Section
+              const Text(
+                '3. Select a Time',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF2D2D2D),
+                ),
+              ),
+              const SizedBox(height: 14),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                  childAspectRatio: 2.2,
+                ),
+                itemCount: _timeSlots.length,
+                itemBuilder: (context, index) {
+                  final time = _timeSlots[index];
+                  final isSelected = _selectedTime == time;
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedTime = time;
+                      });
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
                         color: isSelected
                             ? const Color(0xFF5DADA4)
-                            : const Color(0xFFE0E0E0),
-                        width: 1,
+                            : const Color(0xFFF5F5F5),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isSelected
+                              ? const Color(0xFF5DADA4)
+                              : const Color(0xFFE0E0E0),
+                          width: 1,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          time,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: isSelected
+                                ? Colors.white
+                                : const Color(0xFF2D2D2D),
+                          ),
+                        ),
                       ),
                     ),
-                    child: Text(
-                      time,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: isSelected ? Colors.white : const Color(0xFF2D2D2D),
-                      ),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 32),
+
+              // Confirm Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _confirmAppointment,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFE878B4),
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
                     ),
+                    elevation: 0,
                   ),
-                );
-              }).toList(),
-            ),
-
-            const SizedBox(height: 32),
-
-            // Confirm Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _confirmAppointment,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFE878B4),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
-                ),
-                child: const Text(
-                  'Confirm Appointment',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                  child: const Text(
+                    'Confirm\nAppointment',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                      height: 1.3,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

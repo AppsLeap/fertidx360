@@ -19,6 +19,7 @@ class _DailyLogModalViewState extends State<DailyLogModalView> {
   String? _selectedMood;
   final TextEditingController _sleepController = TextEditingController();
   final TextEditingController _weightController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   String _formatDate(DateTime date) {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -72,7 +73,7 @@ class _DailyLogModalViewState extends State<DailyLogModalView> {
     required TextEditingController controller,
     required String hint,
   }) {
-    return Container(
+    return SizedBox(
       width: 100,
       child: TextField(
         controller: controller,
@@ -100,7 +101,6 @@ class _DailyLogModalViewState extends State<DailyLogModalView> {
   }
 
   void _handleSave() {
-    // TODO: Save to Bolt Database
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -108,6 +108,14 @@ class _DailyLogModalViewState extends State<DailyLogModalView> {
         backgroundColor: Color(0xFF5DADA4),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _sleepController.dispose();
+    _weightController.dispose();
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -123,62 +131,6 @@ class _DailyLogModalViewState extends State<DailyLogModalView> {
       ),
       child: Column(
         children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(24),
-                topRight: Radius.circular(24),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Row(
-                  children: [
-                    Image.asset(
-                      'assets/logo.png',
-                      width: 24,
-                      height: 24,
-                    ),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'FertiDx 360',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF5DADA4),
-                      ),
-                    ),
-                  ],
-                ),
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.notifications_outlined),
-                  onPressed: () {},
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-                const SizedBox(width: 12),
-                IconButton(
-                  icon: const Icon(Icons.account_circle_outlined),
-                  onPressed: () {},
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-              ],
-            ),
-          ),
-
-          // Modal Title
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             child: Row(
@@ -201,195 +153,177 @@ class _DailyLogModalViewState extends State<DailyLogModalView> {
               ],
             ),
           ),
-
-          // Content
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Period Flow
-                  _buildSectionTitle('Period Flow'),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: ['Spotting', 'Light', 'Medium', 'Heavy'].map((flow) {
-                      return _buildChipButton(
-                        label: flow,
-                        isSelected: _selectedPeriodFlow == flow,
-                        onTap: () {
-                          setState(() {
-                            _selectedPeriodFlow = flow;
-                          });
-                        },
-                      );
-                    }).toList(),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Ovulation Test
-                  _buildSectionTitle('Ovulation Test'),
-                  _buildChipButton(
-                    label: 'Positive Test',
-                    isSelected: _positiveOvulationTest,
-                    onTap: () {
-                      setState(() {
-                        _positiveOvulationTest = !_positiveOvulationTest;
-                      });
-                    },
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Symptoms
-                  _buildSectionTitle('Symptoms'),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      'Cramps',
-                      'Headache',
-                      'Fatigue',
-                      'Bloating',
-                      'Nausea',
-                      'Tender Breasts',
-                    ].map((symptom) {
-                      return _buildChipButton(
-                        label: symptom,
-                        isSelected: _selectedSymptoms.contains(symptom),
-                        onTap: () {
-                          setState(() {
-                            if (_selectedSymptoms.contains(symptom)) {
-                              _selectedSymptoms.remove(symptom);
-                            } else {
-                              _selectedSymptoms.add(symptom);
-                            }
-                          });
-                        },
-                      );
-                    }).toList(),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Mood
-                  _buildSectionTitle('Mood'),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: ['Happy', 'Calm', 'Anxious', 'Moody'].map((mood) {
-                      return _buildChipButton(
-                        label: mood,
-                        isSelected: _selectedMood == mood,
-                        onTap: () {
-                          setState(() {
-                            _selectedMood = mood;
-                          });
-                        },
-                      );
-                    }).toList(),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Sleep and Weight
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildSectionTitle('Sleep (hours)'),
-                            _buildTextField(
-                              controller: _sleepController,
-                              hint: '8',
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildSectionTitle('Weight (lbs)'),
-                            _buildTextField(
-                              controller: _weightController,
-                              hint: '140',
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  // Action Buttons
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            side: const BorderSide(
-                              color: Color(0xFFE0E0E0),
-                              width: 1,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
+            child: Scrollbar(
+              controller: _scrollController,
+              thumbVisibility: false,
+              thickness: 4,
+              radius: const Radius.circular(2),
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionTitle('Period Flow'),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: ['Spotting', 'Light', 'Medium', 'Heavy'].map((flow) {
+                        return _buildChipButton(
+                          label: flow,
+                          isSelected: _selectedPeriodFlow == flow,
+                          onTap: () {
+                            setState(() {
+                              _selectedPeriodFlow = flow;
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 24),
+                    _buildSectionTitle('Ovulation Test'),
+                    _buildChipButton(
+                      label: 'Positive Test',
+                      isSelected: _positiveOvulationTest,
+                      onTap: () {
+                        setState(() {
+                          _positiveOvulationTest = !_positiveOvulationTest;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                    _buildSectionTitle('Symptoms'),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        'Cramps',
+                        'Headache',
+                        'Fatigue',
+                        'Bloating',
+                        'Nausea',
+                        'Tender Breasts',
+                      ].map((symptom) {
+                        return _buildChipButton(
+                          label: symptom,
+                          isSelected: _selectedSymptoms.contains(symptom),
+                          onTap: () {
+                            setState(() {
+                              if (_selectedSymptoms.contains(symptom)) {
+                                _selectedSymptoms.remove(symptom);
+                              } else {
+                                _selectedSymptoms.add(symptom);
+                              }
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 24),
+                    _buildSectionTitle('Mood'),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: ['Happy', 'Calm', 'Anxious', 'Moody'].map((mood) {
+                        return _buildChipButton(
+                          label: mood,
+                          isSelected: _selectedMood == mood,
+                          onTap: () {
+                            setState(() {
+                              _selectedMood = mood;
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildSectionTitle('Sleep (hours)'),
+                              _buildTextField(
+                                controller: _sleepController,
+                                hint: '8',
+                              ),
+                            ],
                           ),
-                          child: const Text(
-                            'Cancel',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF7A7A7A),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildSectionTitle('Weight (lbs)'),
+                              _buildTextField(
+                                controller: _weightController,
+                                hint: '140',
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              side: const BorderSide(
+                                color: Color(0xFFE0E0E0),
+                                width: 1,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Text(
+                              'Cancel',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF7A7A7A),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: _handleSave,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF5DADA4),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: _handleSave,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF5DADA4),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 0,
                             ),
-                            elevation: 0,
-                          ),
-                          child: const Text(
-                            'Save',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                            child: const Text(
+                              'Save',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         ],
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _sleepController.dispose();
-    _weightController.dispose();
-    super.dispose();
   }
 }
