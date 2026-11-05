@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'view_files/onboarding_view.dart';
+import 'features/onboarding/views/role_selection_view.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF5DADA4)),
         useMaterial3: true,
       ),
-      home: const OnboardingView(),
+      home: const RoleSelectionView(),
     );
   }
 }
