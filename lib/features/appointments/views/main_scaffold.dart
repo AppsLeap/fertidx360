@@ -79,18 +79,7 @@ class _MainScaffoldState extends State<MainScaffold> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => ProfileView(
-                    role: 'Patient',
-                    email: 'user@fertidx360.com',
-                    password: 'password123',
-                    age: widget.age,
-                    firstDayOfPeriod: widget.firstDayOfPeriod,
-                    cycleLength: widget.cycleLength,
-                    periodDuration: 5,
-                    selectedSymptoms: widget.selectedSymptoms,
-                    categorizedSymptoms: widget.categorizedSymptoms,
-                    otherIssues: widget.otherIssues,
-                  ),
+                  builder: (context) => const ProfileView(),
                 ),
               );
             },

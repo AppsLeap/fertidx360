@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:ferti_360/features/appointments/views/main_scaffold.dart';
 
-class OnboardingCompleteView extends StatelessWidget {
+class OnboardingCompleteView extends StatefulWidget {
   final int age;
   final DateTime firstDayOfPeriod;
   final int cycleLength;
@@ -20,6 +21,71 @@ class OnboardingCompleteView extends StatelessWidget {
     this.categorizedSymptoms = const {},
     required this.otherIssues,
   });
+
+  @override
+  State<OnboardingCompleteView> createState() => _OnboardingCompleteViewState();
+}
+
+class _OnboardingCompleteViewState extends State<OnboardingCompleteView> {
+  bool _isLoading = false;
+
+  Future<void> _handleStartJourney(BuildContext context) async {
+  setState(() {
+    _isLoading = true;
+  });
+
+  try {
+    final user = Supabase.instance.client.auth.currentUser;
+
+    if (user != null) {
+      // Insert patient profile using the authenticated user's ID
+      await Supabase.instance.client.from('patient_profiles').upsert({
+        'user_id': user.id,
+        'age': widget.age,
+        'first_day_of_period': widget.firstDayOfPeriod.toIso8601String().split('T')[0],
+        'cycle_length': widget.cycleLength,
+        'period_duration': widget.periodDuration,
+        'selected_symptoms': widget.selectedSymptoms,
+        'categorized_symptoms': widget.categorizedSymptoms,
+        'other_issues': widget.otherIssues,
+      });
+    } else {
+      print('Error: No active user session found during onboarding!');
+    }
+
+    if (mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MainScaffold(
+            age: widget.age,
+            firstDayOfPeriod: widget.firstDayOfPeriod,
+            cycleLength: widget.cycleLength,
+            selectedSymptoms: widget.selectedSymptoms,
+            categorizedSymptoms: widget.categorizedSymptoms,
+            otherIssues: widget.otherIssues,
+          ),
+        ),
+        (route) => false,
+      );
+    }
+  } catch (e) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error saving profile: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  } finally {
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -98,22 +164,7 @@ class OnboardingCompleteView extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => MainScaffold(
-                          age: age,
-                          firstDayOfPeriod: firstDayOfPeriod,
-                          cycleLength: cycleLength,
-                          selectedSymptoms: selectedSymptoms,
-                          categorizedSymptoms: categorizedSymptoms,
-                          otherIssues: otherIssues,
-                        ),
-                      ),
-                      (route) => false,
-                    );
-                  },
+                  onPressed: _isLoading ? null : () => _handleStartJourney(context),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFE878B4),
                     foregroundColor: Colors.white,
@@ -123,13 +174,22 @@ class OnboardingCompleteView extends StatelessWidget {
                     ),
                     elevation: 0,
                   ),
-                  child: const Text(
-                    'Start My Journey',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text(
+                          'Start My Journey',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                 ),
               ),
 

@@ -1,51 +1,80 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:ferti_360/features/onboarding/views/role_selection_view.dart'; // Ungaloda path-ku etha maari import kuduthukonga
 
 class ProfileView extends StatefulWidget {
-  final String role;
-  final String email;
-  final String password;
-  final int age;
-  final DateTime firstDayOfPeriod;
-  final int cycleLength;
-  final int periodDuration;
-  final List<String> selectedSymptoms;
-  final Map<String, List<String>> categorizedSymptoms;
-  final String otherIssues;
-
-  const ProfileView({
-    super.key,
-    required this.role,
-    required this.email,
-    required this.password,
-    required this.age,
-    required this.firstDayOfPeriod,
-    required this.cycleLength,
-    required this.periodDuration,
-    this.selectedSymptoms = const [],
-    this.categorizedSymptoms = const {},
-    this.otherIssues = '',
-  });
+  const ProfileView({super.key});
 
   @override
   State<ProfileView> createState() => _ProfileViewState();
 }
 
 class _ProfileViewState extends State<ProfileView> {
-  late String _currentPassword;
+  bool _isLoading = true;
+  Map<String, dynamic> _profileData = {};
+  String _errorMessage = '';
+  final String _currentPassword = '••••••••'; // Default mask for security
 
   @override
   void initState() {
     super.initState();
-    _currentPassword = widget.password;
+    _fetchProfileData();
   }
 
-  String _formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}-${date.month.toString().padLeft(2, '0')}-${date.year}';
+  // Fetch user and patient profile data safely
+  Future<void> _fetchProfileData() async {
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null) {
+        setState(() {
+          _errorMessage = 'No user logged in';
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // 1. Fetch user table data safely using maybeSingle
+      final userData = await Supabase.instance.client
+          .from('users')
+          .select()
+          .eq('id', user.id)
+          .maybeSingle();
+
+      // 2. Fetch patient profiles table data safely using maybeSingle
+      final profileData = await Supabase.instance.client
+          .from('patient_profiles')
+          .select()
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+      setState(() {
+        _profileData = {
+          'email': user.email ?? 'N/A',
+          ...?userData,
+          ...?profileData,
+        };
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  String _formatDate(String? dateStr) {
+    if (dateStr == null || dateStr.isEmpty) return 'N/A';
+    try {
+      final date = DateTime.parse(dateStr);
+      return '${date.day.toString().padLeft(2, '0')}-${date.month.toString().padLeft(2, '0')}-${date.year}';
+    } catch (_) {
+      return dateStr;
+    }
   }
 
   void _showChangePasswordDialog() {
-    final TextEditingController passwordController =
-        TextEditingController(text: _currentPassword);
+    final TextEditingController passwordController = TextEditingController();
 
     showDialog(
       context: context,
@@ -70,16 +99,29 @@ class _ProfileViewState extends State<ProfileView> {
                 backgroundColor: const Color(0xFF5DADA4),
                 foregroundColor: Colors.white,
               ),
-              onPressed: () {
+              onPressed: () async {
                 if (passwordController.text.trim().isNotEmpty) {
-                  setState(() {
-                    _currentPassword = passwordController.text.trim();
-                  });
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Password updated successfully!')),
-                  );
+                  try {
+                    await Supabase.instance.client.auth.updateUser(
+                      UserAttributes(password: passwordController.text.trim()),
+                    );
+                    if (mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('Password updated successfully!')),
+                      );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Error: ${e.toString()}'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
                 }
               },
               child: const Text('Save'),
@@ -90,11 +132,95 @@ class _ProfileViewState extends State<ProfileView> {
     );
   }
 
+  // Logout function to clear session and navigate to RoleSelectionView
+  Future<void> _handleLogout() async {
+    try {
+      // 1. Sign out from Supabase
+      await Supabase.instance.client.auth.signOut();
+
+      if (mounted) {
+        // 2. Navigate to RoleSelectionView and clear all previous routes
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const RoleSelectionView(),
+          ),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error logging out: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final bool hasCategorizedData = widget.categorizedSymptoms.values
-        .any((list) => list.isNotEmpty);
-    final bool hasFlatData = widget.selectedSymptoms.isNotEmpty;
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF5F5F0),
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          title: const Text('Profile'),
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(color: Color(0xFF5DADA4)),
+        ),
+      );
+    }
+
+    if (_errorMessage.isNotEmpty) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF5F5F0),
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          title: const Text('Profile'),
+        ),
+        body: Center(
+          child: Text(
+            'Error loading profile: $_errorMessage',
+            style: const TextStyle(color: Colors.red),
+          ),
+        ),
+      );
+    }
+
+    final String email = _profileData['email'] ?? 'N/A';
+    final String role = _profileData['role'] ?? 'Patient';
+    final int age = _profileData['age'] ?? 0;
+    final String firstDayOfPeriod = _profileData['first_day_of_period'] ?? '';
+    final int cycleLength = _profileData['cycle_length'] ?? 0;
+    final int periodDuration = _profileData['period_duration'] ?? 0;
+    
+    // Parse symptoms safely from JSON / List
+    final dynamic rawSymptoms = _profileData['selected_symptoms'];
+    List<String> selectedSymptoms = [];
+    if (rawSymptoms is List) {
+      selectedSymptoms = rawSymptoms.map((e) => e.toString()).toList();
+    }
+
+    final dynamic rawCategorized = _profileData['categorized_symptoms'];
+    Map<String, List<String>> categorizedSymptoms = {};
+    if (rawCategorized is Map) {
+      rawCategorized.forEach((key, value) {
+        if (value is List) {
+          categorizedSymptoms[key.toString()] = value.map((e) => e.toString()).toList();
+        }
+      });
+    }
+
+    final String otherIssues = _profileData['other_issues'] ?? '';
+
+    final bool hasCategorizedData = categorizedSymptoms.values.any((list) => list.isNotEmpty);
+    final bool hasFlatData = selectedSymptoms.isNotEmpty;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F0),
@@ -154,7 +280,7 @@ class _ProfileViewState extends State<ProfileView> {
             const SizedBox(height: 12),
 
             Text(
-              widget.email,
+              email,
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -171,7 +297,7 @@ class _ProfileViewState extends State<ProfileView> {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                widget.role,
+                role,
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
@@ -209,7 +335,7 @@ class _ProfileViewState extends State<ProfileView> {
                   ),
                   const SizedBox(height: 16),
                   _buildInfoRow(
-                      Icons.email_outlined, 'Email / Username', widget.email),
+                      Icons.email_outlined, 'Email / Username', email),
                   const Divider(height: 24, color: Color(0xFFE0E0E0)),
                   Row(
                     children: [
@@ -227,7 +353,7 @@ class _ProfileViewState extends State<ProfileView> {
                         ),
                       ),
                       Text(
-                        '•' * _currentPassword.length,
+                        _currentPassword,
                         style: const TextStyle(
                           fontSize: 15,
                           color: Color(0xFF2D2D2D),
@@ -277,18 +403,18 @@ class _ProfileViewState extends State<ProfileView> {
                   ),
                   const SizedBox(height: 16),
                   _buildInfoRow(
-                      Icons.cake_outlined, 'Age', '${widget.age} Years'),
+                      Icons.cake_outlined, 'Age', '$age Years'),
                   const Divider(height: 24, color: Color(0xFFE0E0E0)),
                   _buildInfoRow(
                       Icons.calendar_today_outlined,
                       'Last Period Start',
-                      _formatDate(widget.firstDayOfPeriod)),
+                      _formatDate(firstDayOfPeriod)),
                   const Divider(height: 24, color: Color(0xFFE0E0E0)),
                   _buildInfoRow(Icons.refresh_rounded, 'Avg. Cycle Length',
-                      '${widget.cycleLength} Days'),
+                      '$cycleLength Days'),
                   const Divider(height: 24, color: Color(0xFFE0E0E0)),
                   _buildInfoRow(Icons.access_time_rounded,
-                      'Avg. Period Duration', '${widget.periodDuration} Days'),
+                      'Avg. Period Duration', '$periodDuration Days'),
                 ],
               ),
             ),
@@ -329,36 +455,35 @@ class _ProfileViewState extends State<ProfileView> {
                       style: TextStyle(color: Color(0xFF7A7A7A), fontSize: 14),
                     )
                   else if (hasCategorizedData) ...[
-                    if ((widget.categorizedSymptoms['Pre-Menstrual'] ?? [])
+                    if ((categorizedSymptoms['Pre-Menstrual'] ?? [])
                         .isNotEmpty) ...[
                       _buildCategoryGroup(
                         'Before Menstruation (Pre-Menstrual)',
-                        widget.categorizedSymptoms['Pre-Menstrual']!,
+                        categorizedSymptoms['Pre-Menstrual']!,
                       ),
                       const SizedBox(height: 12),
                     ],
-                    if ((widget.categorizedSymptoms['During Menstruation'] ?? [])
+                    if ((categorizedSymptoms['During Menstruation'] ?? [])
                         .isNotEmpty) ...[
                       _buildCategoryGroup(
                         'During Menstruation',
-                        widget.categorizedSymptoms['During Menstruation']!,
+                        categorizedSymptoms['During Menstruation']!,
                       ),
                       const SizedBox(height: 12),
                     ],
-                    if ((widget.categorizedSymptoms['Post-Menstrual'] ?? [])
+                    if ((categorizedSymptoms['Post-Menstrual'] ?? [])
                         .isNotEmpty) ...[
                       _buildCategoryGroup(
                         'After Menstruation (Post-Menstrual)',
-                        widget.categorizedSymptoms['Post-Menstrual']!,
+                        categorizedSymptoms['Post-Menstrual']!,
                       ),
                       const SizedBox(height: 12),
                     ],
                   ] else ...[
-                    // Fallback to simple list if only flat list was passed
                     Wrap(
                       spacing: 6.0,
                       runSpacing: 6.0,
-                      children: widget.selectedSymptoms.map((symptom) {
+                      children: selectedSymptoms.map((symptom) {
                         return Chip(
                           label: Text(symptom),
                           backgroundColor:
@@ -372,7 +497,7 @@ class _ProfileViewState extends State<ProfileView> {
                     ),
                   ],
 
-                  if (widget.otherIssues.isNotEmpty) ...[
+                  if (otherIssues.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     const Text(
                       'Other Issues / Notes:',
@@ -384,7 +509,7 @@ class _ProfileViewState extends State<ProfileView> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      widget.otherIssues,
+                      otherIssues,
                       style: const TextStyle(
                         fontSize: 14,
                         color: Color(0xFF2D2D2D),
@@ -394,6 +519,33 @@ class _ProfileViewState extends State<ProfileView> {
                 ],
               ),
             ),
+
+            const SizedBox(height: 24),
+
+            // Log Out Button
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _handleLogout,
+                icon: const Icon(Icons.logout_rounded, color: AppColors.primaryTeal),
+                label: const Text(
+                  'Log Out',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.red,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  side: const BorderSide(color: Colors.red, width: 1.5),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+
             const SizedBox(height: 32),
           ],
         ),
