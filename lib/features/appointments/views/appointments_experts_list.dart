@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'appointments_confirmation.dart';
+import 'package:ferti_360/core/services/notification_service.dart';
 
 class Expert {
   final String name;
@@ -23,7 +24,7 @@ class AppointmentsContent extends StatefulWidget {
 class _AppointmentsContentState extends State<AppointmentsContent> {
   final ScrollController _scrollController = ScrollController();
   Expert? _selectedExpert;
-  DateTime _selectedDate = DateTime(2025, 10, 15);
+  DateTime _selectedDate = DateTime.now();
   String? _selectedTime;
 
   final List<Expert> experts = [
@@ -67,11 +68,15 @@ class _AppointmentsContentState extends State<AppointmentsContent> {
   }
 
   Future<void> _selectDate(BuildContext context) async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final initial = _selectedDate.isBefore(today) ? today : _selectedDate;
+
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2026),
+      initialDate: initial,
+      firstDate: today,
+      lastDate: DateTime(2027, 12, 31),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -93,23 +98,33 @@ class _AppointmentsContentState extends State<AppointmentsContent> {
   }
 
   void _confirmAppointment() {
-    if (_selectedTime != null) {
+    if (_selectedExpert != null && _selectedTime != null) {
+      final expert = _selectedExpert!;
+      final date = _selectedDate;
+      final time = _selectedTime!;
+
+      NotificationProvider.of(context).addAppointmentNotification(
+        expertName: expert.name,
+        specialization: expert.specialization,
+        date: date,
+        time: time,
+      );
+
+      setState(() {
+        _selectedExpert = null;
+        _selectedTime = null;
+      });
+
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => AppointmentsConfirmationView(
-            expert: _selectedExpert!,
-            date: _selectedDate,
-            time: _selectedTime!,
+            expert: expert,
+            date: date,
+            time: time,
           ),
         ),
-      ).then((_) {
-        // Reset state when returning from confirmation
-        setState(() {
-          _selectedExpert = null;
-          _selectedTime = null;
-        });
-      });
+      );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -250,7 +265,6 @@ class _AppointmentsContentState extends State<AppointmentsContent> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Expert Info Card
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -316,10 +330,7 @@ class _AppointmentsContentState extends State<AppointmentsContent> {
                 ],
               ),
             ),
-
             const SizedBox(height: 28),
-
-            // Select Date Section
             const Text(
               '2. Select a Date',
               style: TextStyle(
@@ -360,10 +371,7 @@ class _AppointmentsContentState extends State<AppointmentsContent> {
                 ),
               ),
             ),
-
             const SizedBox(height: 28),
-
-            // Select Time Section
             const Text(
               '3. Select a Time',
               style: TextStyle(
@@ -421,10 +429,7 @@ class _AppointmentsContentState extends State<AppointmentsContent> {
                 );
               },
             ),
-
             const SizedBox(height: 32),
-
-            // Confirm Button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(

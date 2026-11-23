@@ -527,7 +527,7 @@ class _ProfileViewState extends State<ProfileView> {
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: _handleLogout,
-                icon: const Icon(Icons.logout_rounded, color: AppColors.primaryTeal),
+                icon: const Icon(Icons.logout_rounded, color: Colors.red),
                 label: const Text(
                   'Log Out',
                   style: TextStyle(

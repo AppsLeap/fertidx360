@@ -388,7 +388,7 @@ class _OnboardingMenstrualCycleViewState
         return FilterChip(
           label: Text(symptom),
           selected: isSelected,
-          selectedColor: const Color(0xFF5DADA4).withOpacity(0.2),
+          selectedColor: const Color(0xFF5DADA4).withValues(alpha: 0.5),
           checkmarkColor: const Color(0xFF5DADA4),
           backgroundColor: const Color(0xFFF5F5F0),
           shape: RoundedRectangleBorder(

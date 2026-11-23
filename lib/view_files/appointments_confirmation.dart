@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:ferti_360/features/notifications/views/notifications_view.dart';
 import 'appointments_experts_list.dart';
 
-class AppointmentsConfirmationView extends StatelessWidget {
+class AppointmentsConfirmationView extends StatefulWidget {
   final Expert expert;
   final DateTime date;
   final String time;
@@ -12,6 +13,31 @@ class AppointmentsConfirmationView extends StatelessWidget {
     required this.date,
     required this.time,
   });
+
+  @override
+  State<AppointmentsConfirmationView> createState() =>
+      _AppointmentsConfirmationViewState();
+}
+
+class _AppointmentsConfirmationViewState
+    extends State<AppointmentsConfirmationView> {
+  bool _hasAutoNavigated = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !_hasAutoNavigated) {
+        _hasAutoNavigated = true;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const NotificationsView(),
+          ),
+        );
+      }
+    });
+  }
 
   String _formatDate(DateTime date) {
     const months = [
@@ -38,7 +64,6 @@ class AppointmentsConfirmationView extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // Header
             Container(
               color: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -64,7 +89,14 @@ class AppointmentsConfirmationView extends StatelessWidget {
                       Icons.notifications_outlined,
                       color: Color(0xFF2D2D2D),
                     ),
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const NotificationsView(),
+                        ),
+                      );
+                    },
                   ),
                   IconButton(
                     icon: const Icon(
@@ -76,8 +108,6 @@ class AppointmentsConfirmationView extends StatelessWidget {
                 ],
               ),
             ),
-
-            // Content
             Expanded(
               child: Center(
                 child: SingleChildScrollView(
@@ -85,7 +115,6 @@ class AppointmentsConfirmationView extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Success Icon
                       Container(
                         width: 120,
                         height: 120,
@@ -100,8 +129,6 @@ class AppointmentsConfirmationView extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 32),
-
-                      // Title
                       const Text(
                         'Appointment Booked!',
                         style: TextStyle(
@@ -111,10 +138,8 @@ class AppointmentsConfirmationView extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 16),
-
-                      // Confirmation Details
                       Text(
-                        'Your appointment with ${expert.name} is confirmed for ${_formatDate(date)} at $time.',
+                        'Your appointment with ${widget.expert.name} is confirmed for ${_formatDate(widget.date)} at ${widget.time}.',
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontSize: 16,
@@ -123,13 +148,16 @@ class AppointmentsConfirmationView extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 40),
-
-                      // Done Button
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: () {
-                            Navigator.pop(context);
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const NotificationsView(),
+                              ),
+                            );
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF5DADA4),
@@ -140,7 +168,7 @@ class AppointmentsConfirmationView extends StatelessWidget {
                             elevation: 0,
                           ),
                           child: const Text(
-                            'Book another appointment',
+                            'View Notifications',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,

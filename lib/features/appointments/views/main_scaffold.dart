@@ -4,6 +4,8 @@ import '../../calendar/views/calendar_view.dart';
 import '../../analytics/views/analytics_view.dart';
 import 'appointments_experts_list.dart';
 import 'package:ferti_360/features/profile/views/profile_view.dart';
+import 'package:ferti_360/features/notifications/views/notifications_view.dart';
+import 'package:ferti_360/core/services/notification_service.dart';
 
 class MainScaffold extends StatefulWidget {
   final int age;
@@ -38,6 +40,8 @@ class _MainScaffoldState extends State<MainScaffold> {
 
   @override
   Widget build(BuildContext context) {
+    final unreadCount = NotificationProvider.of(context).unreadCount;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -64,11 +68,50 @@ class _MainScaffoldState extends State<MainScaffold> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(
-              Icons.notifications_outlined,
-              color: Color(0xFF2D2D2D),
+            icon: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                const Icon(
+                  Icons.notifications_outlined,
+                  color: Color(0xFF2D2D2D),
+                ),
+                if (unreadCount > 0)
+                  Positioned(
+                    right: -4,
+                    top: -4,
+                    child: Container(
+                      padding: const EdgeInsets.all(3),
+                      constraints: const BoxConstraints(
+                        minWidth: 16,
+                        minHeight: 16,
+                      ),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFE878B4),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          unreadCount > 99 ? '99+' : '$unreadCount',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            height: 1,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotificationsView(),
+                ),
+              );
+            },
           ),
           IconButton(
             icon: const Icon(
