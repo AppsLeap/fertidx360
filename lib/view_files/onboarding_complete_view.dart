@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dashboard_view.dart';
-import 'main_scaffold.dart';
+import '../features/appointments/views/main_scaffold.dart';
 class OnboardingCompleteView extends StatelessWidget {
   final int age;
   final DateTime firstDayOfPeriod;
