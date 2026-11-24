@@ -1,19 +1,26 @@
 import 'package:flutter/material.dart';
-import 'dashboard_view.dart';
-import 'calendar_view.dart';
-import 'analytics_view.dart';
+import '../../dashboard/views/dashboard_view.dart';
+import '../../calendar/views/calendar_view.dart';
+import '../../analytics/views/analytics_view.dart';
 import 'appointments_experts_list.dart';
+import 'package:ferti_360/features/profile/views/profile_view.dart';
 
 class MainScaffold extends StatefulWidget {
   final int age;
   final DateTime firstDayOfPeriod;
   final int cycleLength;
+  final List<String> selectedSymptoms;
+  final Map<String, List<String>> categorizedSymptoms;
+  final String otherIssues;
 
   const MainScaffold({
     super.key,
     required this.age,
     required this.firstDayOfPeriod,
     required this.cycleLength,
+    this.selectedSymptoms = const [],
+    this.categorizedSymptoms = const {},
+    this.otherIssues = '',
   });
 
   @override
@@ -68,7 +75,25 @@ class _MainScaffoldState extends State<MainScaffold> {
               Icons.account_circle_outlined,
               color: Color(0xFF2D2D2D),
             ),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProfileView(
+                    role: 'Patient',
+                    email: 'user@fertidx360.com',
+                    password: 'password123',
+                    age: widget.age,
+                    firstDayOfPeriod: widget.firstDayOfPeriod,
+                    cycleLength: widget.cycleLength,
+                    periodDuration: 5,
+                    selectedSymptoms: widget.selectedSymptoms,
+                    categorizedSymptoms: widget.categorizedSymptoms,
+                    otherIssues: widget.otherIssues,
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),
